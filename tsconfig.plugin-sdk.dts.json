@@ -7,9 +7,13 @@
     "noEmit": false,
     "noEmitOnError": true,
     "outDir": "dist/plugin-sdk",
-    "rootDir": "src",
+    "rootDir": "upstream/src",
     "tsBuildInfoFile": "dist/plugin-sdk/.tsbuildinfo"
   },
-  "include": ["src/plugin-sdk/index.ts", "src/plugin-sdk/account-id.ts", "src/types/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+  "include": [
+    "upstream/src/plugin-sdk/index.ts",
+    "upstream/src/plugin-sdk/account-id.ts",
+    "upstream/src/types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "dist", "upstream/src/**/*.test.ts"]
 }
