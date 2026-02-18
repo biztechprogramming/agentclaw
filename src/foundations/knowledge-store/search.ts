@@ -33,11 +33,11 @@ export function hybridSearch(db: Database.Database, options: SearchOptions): Sea
     const ftsResults = db
       .prepare(`
       SELECT c.id, c.content, c.source_uri, c.metadata,
-             rank * -1 as score
+             bm25(content_chunks_fts) * -1 as score
       FROM content_chunks_fts fts
       JOIN content_chunks c ON c.rowid = fts.rowid
       WHERE content_chunks_fts MATCH ?
-      ORDER BY rank
+      ORDER BY bm25(content_chunks_fts)
       LIMIT ?
     `)
       .all(options.query, limit) as Array<{
@@ -48,11 +48,14 @@ export function hybridSearch(db: Database.Database, options: SearchOptions): Sea
       score: number;
     }>;
 
+    // Normalize FTS scores: BM25 produces very small values with few docs.
+    // Map to 0-1 range relative to the best match.
+    const maxFts = ftsResults.length > 0 ? Math.max(...ftsResults.map((r) => r.score), 1e-10) : 1;
     for (const r of ftsResults) {
       results.push({
         id: r.id,
         content: r.content,
-        score: r.score,
+        score: maxFts > 0 ? r.score / maxFts : 1, // normalize to 0-1
         source: "fts",
         sourceUri: r.source_uri,
         metadata: JSON.parse(r.metadata || "{}"),
