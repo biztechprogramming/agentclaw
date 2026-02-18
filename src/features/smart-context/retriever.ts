@@ -35,7 +35,7 @@ export class ContextRetriever {
     const rawResults = hybridSearch(this.db, {
       query,
       limit: 50,
-      minScore: 0.01,
+      minScore: 0,
     });
 
     // Score and convert to ContextChunks
