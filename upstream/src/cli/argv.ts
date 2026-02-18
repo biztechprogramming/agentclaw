@@ -128,7 +128,7 @@ export function buildParseArgv(params: {
   if (looksLikeNode) {
     return normalizedArgv;
   }
-  return ["node", programName || "openclaw", ...normalizedArgv];
+  return ["node", programName || "agentclaw", ...normalizedArgv];
 }
 
 const nodeExecutablePattern = /^node-\d+(?:\.\d+)*(?:\.exe)?$/;
