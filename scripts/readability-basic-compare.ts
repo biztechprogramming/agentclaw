@@ -1,4 +1,4 @@
-import { createWebFetchTool } from "../src/agents/tools/web-tools.js";
+import { createWebFetchTool } from "../upstream/src/agents/tools/web-tools.js";
 
 const DEFAULT_URLS = [
   "https://example.com/",

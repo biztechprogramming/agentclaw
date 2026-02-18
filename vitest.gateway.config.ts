@@ -9,7 +9,7 @@ export default defineConfig({
   ...base,
   test: {
     ...baseTest,
-    include: ["src/gateway/**/*.test.ts"],
+    include: ["upstream/src/gateway/**/*.test.ts"],
     exclude,
   },
 });

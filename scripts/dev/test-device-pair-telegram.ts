@@ -1,7 +1,7 @@
-import { loadConfig } from "../../src/config/config.js";
-import { matchPluginCommand, executePluginCommand } from "../../src/plugins/commands.js";
-import { loadOpenClawPlugins } from "../../src/plugins/loader.js";
-import { sendMessageTelegram } from "../../src/telegram/send.js";
+import { loadConfig } from "../../upstream/src/config/config.js";
+import { matchPluginCommand, executePluginCommand } from "../../upstream/src/plugins/commands.js";
+import { loadOpenClawPlugins } from "../../upstream/src/plugins/loader.js";
+import { sendMessageTelegram } from "../../upstream/src/telegram/send.js";
 
 const args = process.argv.slice(2);
 const getArg = (flag: string, short?: string) => {

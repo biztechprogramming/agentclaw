@@ -6,52 +6,52 @@ const env = {
 
 export default defineConfig([
   {
-    entry: "src/index.ts",
+    entry: "upstream/src/index.ts",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: "src/entry.ts",
+    entry: "upstream/src/entry.ts",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
     // Ensure this module is bundled as an entry so legacy CLI shims can resolve its exports.
-    entry: "src/cli/daemon-cli.ts",
+    entry: "upstream/src/cli/daemon-cli.ts",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: "src/infra/warning-filter.ts",
+    entry: "upstream/src/infra/warning-filter.ts",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: "src/plugin-sdk/index.ts",
+    entry: "upstream/src/plugin-sdk/index.ts",
     outDir: "dist/plugin-sdk",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: "src/plugin-sdk/account-id.ts",
+    entry: "upstream/src/plugin-sdk/account-id.ts",
     outDir: "dist/plugin-sdk",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: "src/extensionAPI.ts",
+    entry: "upstream/src/extensionAPI.ts",
     env,
     fixedExtension: false,
     platform: "node",
   },
   {
-    entry: ["src/hooks/bundled/*/handler.ts", "src/hooks/llm-slug-generator.ts"],
+    entry: ["upstream/src/hooks/bundled/*/handler.ts", "upstream/src/hooks/llm-slug-generator.ts"],
     env,
     fixedExtension: false,
     platform: "node",

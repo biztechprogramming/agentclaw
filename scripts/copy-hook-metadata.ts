@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 
-const srcBundled = path.join(projectRoot, "src", "hooks", "bundled");
+const srcBundled = path.join(projectRoot, "upstream", "src", "hooks", "bundled");
 const distBundled = path.join(projectRoot, "dist", "bundled");
 
 function copyHookMetadata() {
