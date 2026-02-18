@@ -44,6 +44,55 @@ describe("CapabilityGate", () => {
     expect(() => gate.check("send_email", { channel: "slack" })).toThrow(CapabilityDeniedError);
   });
 
+  it("channel+persona policy beats channel-only policy", () => {
+    store = new KnowledgeStore();
+    store.insertPolicy({ id: "p1", capability: "send_email", effect: "allow", channel: "discord" });
+    store.insertPolicy({
+      id: "p2",
+      capability: "send_email",
+      effect: "deny",
+      channel: "discord",
+      persona: "bot",
+    });
+    const gate = new CapabilityGate(store);
+
+    // channel+persona match is more specific → deny
+    expect(() => gate.check("send_email", { channel: "discord", persona: "bot" })).toThrow(
+      CapabilityDeniedError,
+    );
+    // channel-only match → allow
+    expect(() => gate.check("send_email", { channel: "discord", persona: "admin" })).not.toThrow();
+  });
+
+  it("default allows when no policies match the capability", () => {
+    store = new KnowledgeStore();
+    // Policy for a different capability
+    store.insertPolicy({ id: "p1", capability: "make_purchase", effect: "deny" });
+    const gate = new CapabilityGate(store);
+    expect(() => gate.check("send_email", { channel: "discord" })).not.toThrow();
+  });
+
+  it("deny wins ties at same specificity", () => {
+    store = new KnowledgeStore();
+    store.insertPolicy({ id: "p1", capability: "send_email", effect: "allow", channel: "discord" });
+    store.insertPolicy({ id: "p2", capability: "send_email", effect: "deny", channel: "discord" });
+    const gate = new CapabilityGate(store);
+    expect(() => gate.check("send_email", { channel: "discord" })).toThrow(CapabilityDeniedError);
+  });
+
+  it("approval_required wins over allow at same specificity", () => {
+    store = new KnowledgeStore();
+    store.insertPolicy({ id: "p1", capability: "send_email", effect: "allow", channel: "discord" });
+    store.insertPolicy({
+      id: "p2",
+      capability: "send_email",
+      effect: "approval_required",
+      channel: "discord",
+    });
+    const gate = new CapabilityGate(store);
+    expect(() => gate.check("send_email", { channel: "discord" })).toThrow(ApprovalRequiredError);
+  });
+
   it("logs audit entries for checks", () => {
     store = new KnowledgeStore();
     const gate = new CapabilityGate(store);

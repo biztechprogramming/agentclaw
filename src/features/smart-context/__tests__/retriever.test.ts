@@ -58,4 +58,78 @@ describe("ContextRetriever", () => {
     const chunks = await retriever.retrieve("quantum_physics_nonexistent");
     expect(chunks).toHaveLength(0);
   });
+
+  it("recency weighting: newer chunks score higher", async () => {
+    const store2 = new KnowledgeStore({ dbPath: ":memory:" });
+    const now = new Date();
+    const oldDate = new Date(now.getTime() - 30 * 24 * 3600_000).toISOString();
+    const newDate = new Date(now.getTime() - 1 * 3600_000).toISOString();
+    store2.insertChunk({
+      id: "old1",
+      sourceUri: "test://old",
+      content: "javascript framework comparison guide",
+      metadata: { created_at: oldDate },
+    });
+    store2.insertChunk({
+      id: "new1",
+      sourceUri: "test://new",
+      content: "javascript framework latest updates",
+      metadata: { created_at: newDate },
+    });
+    const r = new ContextRetriever(store2.db);
+    const chunks = await r.retrieve("javascript framework");
+    expect(chunks.length).toBeGreaterThanOrEqual(2);
+    const newChunk = chunks.find((c) => c.id === "new1");
+    const oldChunk = chunks.find((c) => c.id === "old1");
+    expect(newChunk).toBeDefined();
+    expect(oldChunk).toBeDefined();
+    expect(newChunk!.score).toBeGreaterThan(oldChunk!.score);
+    store2.close();
+  });
+
+  it("entity boost: chunks with matching entity mentions score higher", async () => {
+    const store2 = new KnowledgeStore({ dbPath: ":memory:" });
+    store2.insertChunk({
+      id: "ch1",
+      sourceUri: "test://1",
+      content: "advanced react patterns overview",
+    });
+    store2.insertChunk({
+      id: "ch2",
+      sourceUri: "test://2",
+      content: "advanced react hooks tutorial",
+    });
+    store2.insertEntity({ id: "e1", name: "React", type: "topic" });
+    store2.db
+      .prepare("INSERT INTO entity_mentions (id, entity_id, chunk_id) VALUES (?, ?, ?)")
+      .run("em1", "e1", "ch1");
+    const r = new ContextRetriever(store2.db);
+    const chunks = await r.retrieve("react", ["e1"]);
+    const boosted = chunks.find((c) => c.id === "ch1");
+    const unboosted = chunks.find((c) => c.id === "ch2");
+    expect(boosted).toBeDefined();
+    expect(unboosted).toBeDefined();
+    expect(boosted!.score).toBeGreaterThan(unboosted!.score);
+    store2.close();
+  });
+
+  it("deduplication: duplicate content returns only one", async () => {
+    const store2 = new KnowledgeStore({ dbPath: ":memory:" });
+    store2.insertChunk({
+      id: "d1",
+      sourceUri: "test://1",
+      content: "unique dedup test content here",
+    });
+    store2.insertChunk({
+      id: "d2",
+      sourceUri: "test://2",
+      content: "unique dedup test content here",
+    });
+    const r = new ContextRetriever(store2.db);
+    const chunks = await r.retrieve("unique dedup test");
+    const contents = chunks.map((c) => c.content);
+    const unique = new Set(contents);
+    expect(unique.size).toBe(contents.length);
+    store2.close();
+  });
 });
