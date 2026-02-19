@@ -12,36 +12,36 @@ describe("Edge cases", () => {
     store?.close();
   });
 
-  it("empty string search does not crash", () => {
+  it("empty string search does not crash", async () => {
     store = new KnowledgeStore();
-    store.insertChunk({ id: "c1", sourceUri: "t://1", content: "some content" });
-    const results = hybridSearch(store.db, { query: "" });
+    await store.insertChunk({ id: "c1", sourceUri: "t://1", content: "some content" });
+    const results = await hybridSearch(store.db, { query: "" });
     expect(Array.isArray(results)).toBe(true);
   });
 
-  it("very long text chunks correctly", () => {
+  it("very long text chunks correctly", async () => {
     store = new KnowledgeStore();
     const longText = "word ".repeat(500);
-    store.insertChunk({ id: "c1", sourceUri: "t://1", content: longText });
+    await store.insertChunk({ id: "c1", sourceUri: "t://1", content: longText });
     const chunk = store.getChunk("c1");
     expect(chunk).toBeDefined();
     expect((chunk!.content as string).length).toBe(longText.length);
   });
 
-  it("unicode content in FTS does not crash", () => {
+  it("unicode content in FTS does not crash", async () => {
     store = new KnowledgeStore();
-    store.insertChunk({ id: "c1", sourceUri: "t://1", content: "日本語テスト検索" });
+    await store.insertChunk({ id: "c1", sourceUri: "t://1", content: "日本語テスト検索" });
     // FTS5 tokenizer may not support CJK well, but should not crash
-    expect(() => hybridSearch(store.db, { query: "日本語" })).not.toThrow();
+    await expect(hybridSearch(store.db, { query: "日本語" })).resolves.not.toThrow();
   });
 
-  it("special FTS characters in query do not crash", () => {
+  it("special FTS characters in query do not crash", async () => {
     store = new KnowledgeStore();
-    store.insertChunk({ id: "c1", sourceUri: "t://1", content: "test content here" });
+    await store.insertChunk({ id: "c1", sourceUri: "t://1", content: "test content here" });
     // These would normally break FTS5 if not handled
-    expect(() => hybridSearch(store.db, { query: '"unmatched' })).not.toThrow();
-    expect(() => hybridSearch(store.db, { query: "foo(bar)" })).not.toThrow();
-    expect(() => hybridSearch(store.db, { query: "OR AND NOT" })).not.toThrow();
+    await expect(hybridSearch(store.db, { query: '"unmatched' })).resolves.not.toThrow();
+    await expect(hybridSearch(store.db, { query: "foo(bar)" })).resolves.not.toThrow();
+    await expect(hybridSearch(store.db, { query: "OR AND NOT" })).resolves.not.toThrow();
   });
 
   it("handler throwing propagates through pipeline", async () => {

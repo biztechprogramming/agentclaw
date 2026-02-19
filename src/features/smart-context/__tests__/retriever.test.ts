@@ -6,22 +6,22 @@ describe("ContextRetriever", () => {
   let store: KnowledgeStore;
   let retriever: ContextRetriever;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     store = new KnowledgeStore({ dbPath: ":memory:" });
     retriever = new ContextRetriever(store.db);
 
     // Seed some content
-    store.insertChunk({
+    await store.insertChunk({
       id: "c1",
       sourceUri: "test://1",
       content: "typescript project architecture overview",
     });
-    store.insertChunk({
+    await store.insertChunk({
       id: "c2",
       sourceUri: "test://2",
       content: "python data pipeline for training",
     });
-    store.insertChunk({
+    await store.insertChunk({
       id: "c3",
       sourceUri: "test://3",
       content: "meeting notes about typescript refactoring",
@@ -64,13 +64,13 @@ describe("ContextRetriever", () => {
     const now = new Date();
     const oldDate = new Date(now.getTime() - 30 * 24 * 3600_000).toISOString();
     const newDate = new Date(now.getTime() - 1 * 3600_000).toISOString();
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "old1",
       sourceUri: "test://old",
       content: "javascript framework comparison guide",
       metadata: { created_at: oldDate },
     });
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "new1",
       sourceUri: "test://new",
       content: "javascript framework latest updates",
@@ -89,12 +89,12 @@ describe("ContextRetriever", () => {
 
   it("entity boost: chunks with matching entity mentions score higher", async () => {
     const store2 = new KnowledgeStore({ dbPath: ":memory:" });
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "ch1",
       sourceUri: "test://1",
       content: "advanced react patterns overview",
     });
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "ch2",
       sourceUri: "test://2",
       content: "advanced react hooks tutorial",
@@ -115,12 +115,12 @@ describe("ContextRetriever", () => {
 
   it("deduplication: duplicate content returns only one", async () => {
     const store2 = new KnowledgeStore({ dbPath: ":memory:" });
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "d1",
       sourceUri: "test://1",
       content: "unique dedup test content here",
     });
-    store2.insertChunk({
+    await store2.insertChunk({
       id: "d2",
       sourceUri: "test://2",
       content: "unique dedup test content here",

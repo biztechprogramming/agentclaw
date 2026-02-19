@@ -189,12 +189,12 @@ describe("Integration: Entity Graph + Knowledge Store", () => {
     expect(path[2]).toBe(p2);
   });
 
-  it("entity mentions link chunks to entities", () => {
+  it("entity mentions link chunks to entities", async () => {
     // Store an entity
     const e1 = graph.addEntity({ name: "TypeScript", type: "technology" });
 
     // Store a chunk mentioning the entity
-    store.insertChunk({
+    await store.insertChunk({
       id: "c1",
       sourceUri: "test://1",
       content: "TypeScript is great for building agent systems",
@@ -269,20 +269,24 @@ describe("Integration: Context Window Manager", () => {
   let store: KnowledgeStore;
   let windowManager: ContextWindowManager;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     store = new KnowledgeStore({ dbPath: ":memory:" });
     const retriever = new ContextRetriever(store.db);
     const summarizer = new SessionSummarizer(store.db);
     windowManager = new ContextWindowManager(retriever, summarizer);
 
     // Seed knowledge
-    store.insertChunk({
+    await store.insertChunk({
       id: "c1",
       sourceUri: "s1",
       content: "TypeScript architecture decisions from last week",
     });
-    store.insertChunk({ id: "c2", sourceUri: "s2", content: "Python data pipeline configuration" });
-    store.insertChunk({
+    await store.insertChunk({
+      id: "c2",
+      sourceUri: "s2",
+      content: "Python data pipeline configuration",
+    });
+    await store.insertChunk({
       id: "c3",
       sourceUri: "s3",
       content: "Meeting notes about TypeScript refactoring",
