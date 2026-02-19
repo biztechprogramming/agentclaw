@@ -17,6 +17,8 @@
     "oxc/no-async-endpoint-handlers": "off",
     "oxc/no-map-spread": "off",
     "typescript/no-explicit-any": "error",
+    "typescript/no-unused-vars": "off",
+    "eslint/no-unused-expressions": "off",
     "typescript/no-extraneous-class": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "unicorn/consistent-function-scoping": "off",
@@ -33,6 +35,7 @@
     "skills/",
     "src/auto-reply/reply/export-html/template.js",
     "src/canvas-host/a2ui/a2ui.bundle.js",
+    "upstream/src/canvas-host/a2ui/a2ui.bundle.js",
     "Swabble/",
     "vendor/"
   ]

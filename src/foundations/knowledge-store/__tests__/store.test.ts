@@ -35,9 +35,9 @@ describe("KnowledgeStore", () => {
     expect(names).toContain("capability_policies");
   });
 
-  it("inserts and retrieves content chunks", () => {
+  it("inserts and retrieves content chunks", async () => {
     store = new KnowledgeStore();
-    store.insertChunk({ id: "c1", sourceUri: "test://doc", content: "Hello world" });
+    await store.insertChunk({ id: "c1", sourceUri: "test://doc", content: "Hello world" });
     const chunk = store.getChunk("c1");
     expect(chunk).toBeDefined();
     expect(chunk!.content).toBe("Hello world");
@@ -52,12 +52,16 @@ describe("KnowledgeStore", () => {
     expect(entity!.name).toBe("Alice");
   });
 
-  it("FTS5 search works", () => {
+  it("FTS5 search works", async () => {
     store = new KnowledgeStore();
-    store.insertChunk({ id: "c1", sourceUri: "test://a", content: "The quick brown fox jumps" });
-    store.insertChunk({ id: "c2", sourceUri: "test://b", content: "A lazy dog sleeps" });
+    await store.insertChunk({
+      id: "c1",
+      sourceUri: "test://a",
+      content: "The quick brown fox jumps",
+    });
+    await store.insertChunk({ id: "c2", sourceUri: "test://b", content: "A lazy dog sleeps" });
 
-    const results = hybridSearch(store.db, { query: "fox" });
+    const results = await hybridSearch(store.db, { query: "fox" });
     expect(results.length).toBeGreaterThanOrEqual(1);
     expect(results[0].id).toBe("c1");
   });
