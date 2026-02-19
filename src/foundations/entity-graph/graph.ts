@@ -93,11 +93,14 @@ export class EntityGraph {
     };
   }
 
-  /** Find entity by name and type */
-  findEntity(name: string, type: string): GraphEntity | undefined {
-    const row = this.db
-      .prepare("SELECT * FROM entities WHERE name = ? AND type = ?")
-      .get(name, type) as Record<string, unknown> | undefined;
+  /** Find entity by name and optional type (empty/undefined type = type-agnostic) */
+  findEntity(name: string, type?: string): GraphEntity | undefined {
+    const query = type
+      ? "SELECT * FROM entities WHERE name = ? AND type = ?"
+      : "SELECT * FROM entities WHERE name = ? LIMIT 1";
+    const row = (
+      type ? this.db.prepare(query).get(name, type) : this.db.prepare(query).get(name)
+    ) as Record<string, unknown> | undefined;
     if (!row) {
       return undefined;
     }

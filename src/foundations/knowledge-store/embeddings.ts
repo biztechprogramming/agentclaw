@@ -5,8 +5,10 @@
 
 /** Interface for embedding providers */
 export interface IEmbeddingProvider {
-  /** Generate embedding vector for text */
+  /** Generate embedding vector for text (document indexing) */
   embed(text: string): Promise<Float32Array>;
+  /** Generate embedding vector for search queries (optional, defaults to embed) */
+  embedQuery?(text: string): Promise<Float32Array>;
   /** Dimensionality of output vectors */
   readonly dimensions: number;
 }

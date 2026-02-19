@@ -8,6 +8,7 @@ const fromHere = (p) => path.resolve(here, p);
 const outputFile = path.resolve(
   here,
   "../../../../..",
+  "upstream",
   "src",
   "canvas-host",
   "a2ui",

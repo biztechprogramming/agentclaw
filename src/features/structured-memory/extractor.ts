@@ -21,7 +21,67 @@ const PATTERNS: Array<{ type: EntityType; pattern: RegExp }> = [
   { type: EntityType.Project, pattern: /\b([A-Z]{2,}-\d+)\b/g },
   // URLs as topics
   { type: EntityType.Topic, pattern: /\b(https?:\/\/[^\s]+)\b/g },
+  // Single capitalized words (Topic, lower confidence)
+  { type: EntityType.Topic, pattern: /\b([A-Z][a-z]{2,})\b/g },
 ];
+
+/** Common English words to skip when extracting single capitalized words */
+const STOPWORDS = new Set([
+  "The",
+  "This",
+  "That",
+  "When",
+  "Where",
+  "What",
+  "How",
+  "Here",
+  "There",
+  "Some",
+  "Each",
+  "Every",
+  "Many",
+  "Most",
+  "After",
+  "Before",
+  "During",
+  "About",
+  "From",
+  "Into",
+  "With",
+  "Then",
+  "Also",
+  "Just",
+  "Like",
+  "Even",
+  "More",
+  "Much",
+  "Very",
+  "Such",
+  "Only",
+  "Other",
+  "Another",
+  "Both",
+  "Because",
+  "Since",
+  "While",
+  "Until",
+  "Though",
+  "Although",
+  "However",
+  "Therefore",
+  "Otherwise",
+  "Instead",
+  "Perhaps",
+  "Maybe",
+  "Already",
+  "Always",
+  "Never",
+  "Sometimes",
+  "Often",
+  "Usually",
+  "Still",
+  "Yet",
+]);
 
 /**
  * Stub regex-based extraction fallback.
@@ -37,15 +97,22 @@ function regexExtract(text: string): ExtractionResult {
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(text)) !== null) {
       const name = match[1];
+      // Skip stopwords for single-word Topic pattern
+      if (type === EntityType.Topic && !name.includes("://") && STOPWORDS.has(name)) {
+        continue;
+      }
       const key = `${type}:${name.toLowerCase()}`;
       if (seen.has(key)) {
         continue;
       }
       seen.add(key);
+      // Single capitalized words get lower confidence
+      const isSingleWord =
+        type === EntityType.Topic && !name.includes("://") && !name.includes(" ");
       entities.push({
         name,
         type,
-        confidence: 0.5,
+        confidence: isSingleWord ? 0.3 : 0.5,
         startOffset: match.index,
         endOffset: match.index + match[0].length,
       });

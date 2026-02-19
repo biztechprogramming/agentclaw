@@ -23,7 +23,7 @@ export class SearchMemoryHandler implements IRequestHandler<SearchMemoryQuery, S
   ) {}
 
   async handle(request: SearchMemoryQuery): Promise<SearchResult[]> {
-    const results = hybridSearch(this.db, {
+    const results = await hybridSearch(this.db, {
       query: request.query,
       limit: (request.limit ?? 20) * 2, // fetch extra for boosting
       minScore: request.minScore,
@@ -47,7 +47,32 @@ export class SearchMemoryHandler implements IRequestHandler<SearchMemoryQuery, S
       results.sort((a, b) => b.score - a.score);
     }
 
-    return results.slice(0, request.limit ?? 20);
+    // Filter out results whose chunks only link to forgotten entities
+    const filtered = results.filter((result) => {
+      try {
+        const mentions = this.db
+          .prepare("SELECT entity_id FROM entity_mentions WHERE chunk_id = ?")
+          .all(result.id) as Array<{ entity_id: string }>;
+        if (mentions.length === 0) {
+          return true;
+        }
+        const allForgotten = mentions.every((m) => {
+          const entity = this.db
+            .prepare("SELECT metadata FROM entities WHERE id = ?")
+            .get(m.entity_id) as { metadata: string } | undefined;
+          if (!entity) {
+            return false;
+          }
+          const meta = JSON.parse(entity.metadata || "{}") as Record<string, unknown>;
+          return !!meta.forgotten;
+        });
+        return !allForgotten;
+      } catch {
+        return true;
+      }
+    });
+
+    return filtered.slice(0, request.limit ?? 20);
   }
 }
 
@@ -65,6 +90,9 @@ export class GetEntityContextHandler implements IRequestHandler<
     const entity = this.graph.getEntity(request.entityId);
     if (!entity) {
       throw new Error(`Entity not found: ${request.entityId}`);
+    }
+    if (entity.metadata?.forgotten) {
+      throw new Error(`Entity has been forgotten: ${request.entityId}`);
     }
 
     const relationships = this.graph.getRelationships(request.entityId);

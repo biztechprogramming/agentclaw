@@ -210,4 +210,11 @@ export const MIGRATIONS: string[] = [
 
   CREATE INDEX IF NOT EXISTS idx_time_capsules_deliver ON time_capsules(deliver_at);
   `,
+
+  // Migration 1: Vector search table (requires sqlite-vec extension)
+  `
+  CREATE VIRTUAL TABLE IF NOT EXISTS vec_content_chunks USING vec0(
+    embedding float[1024]
+  );
+  `,
 ];

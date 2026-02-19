@@ -4,6 +4,7 @@
  */
 
 import type Database from "better-sqlite3";
+import type { IEmbeddingProvider } from "./embeddings.ts";
 
 export interface SearchResult {
   id: string;
@@ -18,13 +19,18 @@ export interface SearchOptions {
   query: string;
   limit?: number;
   minScore?: number;
+  /** Optional embedding provider for vector search */
+  embeddingProvider?: IEmbeddingProvider;
 }
 
 /**
  * Perform hybrid search across FTS5, vector, and entity graph.
  * Results are merged and ranked by score.
  */
-export function hybridSearch(db: Database.Database, options: SearchOptions): SearchResult[] {
+export async function hybridSearch(
+  db: Database.Database,
+  options: SearchOptions,
+): Promise<SearchResult[]> {
   const limit = options.limit ?? 20;
   const results: SearchResult[] = [];
 
@@ -65,8 +71,52 @@ export function hybridSearch(db: Database.Database, options: SearchOptions): Sea
     // FTS query may fail on invalid syntax — skip
   }
 
-  // 2. Vector search (requires sqlite-vec extension)
-  // Skipped in stub — real implementation would query vec0 virtual table
+  // 2. Vector search (requires sqlite-vec extension + embedding provider)
+  if (options.embeddingProvider) {
+    try {
+      const provider = options.embeddingProvider;
+      const queryEmbedding = provider.embedQuery
+        ? await provider.embedQuery(options.query)
+        : await provider.embed(options.query);
+      const queryBuf = Buffer.from(queryEmbedding.buffer);
+
+      const vecResults = db
+        .prepare(`
+        SELECT v.rowid, v.distance,
+               c.id, c.content, c.source_uri, c.metadata
+        FROM vec_content_chunks v
+        JOIN content_chunks c ON c.rowid = v.rowid
+        WHERE v.embedding MATCH ?
+        ORDER BY v.distance
+        LIMIT ?
+      `)
+        .all(queryBuf, limit) as Array<{
+        rowid: number;
+        distance: number;
+        id: string;
+        content: string;
+        source_uri: string;
+        metadata: string;
+      }>;
+
+      for (const r of vecResults) {
+        if (!results.some((existing) => existing.id === r.id)) {
+          // Convert cosine distance to similarity score (0-1)
+          const score = Math.max(0, 1 - r.distance);
+          results.push({
+            id: r.id,
+            content: r.content,
+            score,
+            source: "vector",
+            sourceUri: r.source_uri,
+            metadata: JSON.parse(r.metadata || "{}"),
+          });
+        }
+      }
+    } catch {
+      // Vector search may fail if sqlite-vec not loaded or table missing
+    }
+  }
 
   // 3. Entity graph traversal — find chunks mentioning entities matching query
   try {
@@ -76,7 +126,8 @@ export function hybridSearch(db: Database.Database, options: SearchOptions): Sea
       FROM entities e
       JOIN entity_mentions em ON em.entity_id = e.id
       JOIN content_chunks c ON c.id = em.chunk_id
-      WHERE e.name LIKE ? OR e.description LIKE ?
+      WHERE (e.name LIKE ? OR e.description LIKE ?)
+        AND COALESCE(json_extract(e.metadata, '$.forgotten'), 'false') != 'true'
       LIMIT ?
     `)
       .all(`%${options.query}%`, `%${options.query}%`, limit) as Array<{

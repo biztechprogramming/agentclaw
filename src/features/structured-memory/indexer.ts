@@ -46,6 +46,23 @@ export class MemoryIndexer {
     private readonly mediator: Mediator,
   ) {}
 
+  /** Re-index content: delete existing chunks for sourceUri, then index fresh */
+  async reindex(
+    sourceUri: string,
+    content: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<MemoryEntry> {
+    // Delete existing entity mentions for chunks of this sourceUri
+    this.store.db
+      .prepare(
+        "DELETE FROM entity_mentions WHERE chunk_id IN (SELECT id FROM content_chunks WHERE source_uri = ?)",
+      )
+      .run(sourceUri);
+    // Delete existing chunks
+    this.store.db.prepare("DELETE FROM content_chunks WHERE source_uri = ?").run(sourceUri);
+    return this.index(sourceUri, content, metadata);
+  }
+
   /** Index a piece of content, returning a MemoryEntry */
   async index(
     sourceUri: string,
@@ -63,7 +80,7 @@ export class MemoryIndexer {
       }
 
       // Store chunk
-      this.store.insertChunk({
+      await this.store.insertChunk({
         id: chunkId,
         sourceUri,
         chunkIndex: i,

@@ -8,8 +8,8 @@ on_error() {
 trap on_error ERR
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-HASH_FILE="$ROOT_DIR/src/canvas-host/a2ui/.bundle.hash"
-OUTPUT_FILE="$ROOT_DIR/src/canvas-host/a2ui/a2ui.bundle.js"
+HASH_FILE="$ROOT_DIR/upstream/src/canvas-host/a2ui/.bundle.hash"
+OUTPUT_FILE="$ROOT_DIR/upstream/src/canvas-host/a2ui/a2ui.bundle.js"
 A2UI_RENDERER_DIR="$ROOT_DIR/vendor/a2ui/renderers/lit"
 A2UI_APP_DIR="$ROOT_DIR/apps/shared/OpenClawKit/Tools/CanvasA2UI"
 

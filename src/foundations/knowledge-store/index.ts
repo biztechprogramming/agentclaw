@@ -9,6 +9,8 @@ export { hybridSearch } from "./search.ts";
 export type { SearchResult, SearchOptions } from "./search.ts";
 export type { IEmbeddingProvider } from "./embeddings.ts";
 export { StubEmbeddingProvider } from "./embeddings.ts";
+export { VoyageEmbeddingProvider } from "./voyage-embeddings.ts";
+export type { VoyageEmbeddingOptions } from "./voyage-embeddings.ts";
 export type {
   IndexContentCommand,
   SearchKnowledgeQuery,

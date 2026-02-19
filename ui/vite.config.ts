@@ -23,6 +23,9 @@ export default defineConfig(() => {
   const base = envBase ? normalizeBase(envBase) : "./";
   return {
     base,
+    resolve: {
+      extensions: [".ts", ".js", ".mjs", ".json"],
+    },
     publicDir: path.resolve(here, "public"),
     optimizeDeps: {
       include: ["lit/directives/repeat.js"],

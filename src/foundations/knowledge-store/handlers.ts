@@ -21,7 +21,7 @@ export class IndexContentHandler implements IRequestHandler<IndexContentCommand,
 
   async handle(request: IndexContentCommand): Promise<string> {
     const id = randomUUID();
-    this.store.insertChunk({
+    await this.store.insertChunk({
       id,
       sourceUri: request.sourceUri,
       chunkIndex: request.chunkIndex,
@@ -40,7 +40,7 @@ export class SearchKnowledgeHandler implements IRequestHandler<
   constructor(private store: KnowledgeStore) {}
 
   async handle(request: SearchKnowledgeQuery): Promise<SearchResult[]> {
-    return hybridSearch(this.store.db, {
+    return await hybridSearch(this.store.db, {
       query: request.query,
       limit: request.limit,
       minScore: request.minScore,

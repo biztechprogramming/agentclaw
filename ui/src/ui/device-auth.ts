@@ -3,7 +3,7 @@ import {
   type DeviceAuthStore,
   normalizeDeviceAuthRole,
   normalizeDeviceAuthScopes,
-} from "../../../src/shared/device-auth.js";
+} from "../../../upstream/src/shared/device-auth.ts";
 
 const STORAGE_KEY = "openclaw.device.auth.v1";
 

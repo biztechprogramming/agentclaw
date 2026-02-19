@@ -1,4 +1,6 @@
 export * from "./types.ts";
+export { AnthropicSummarizationProvider } from "./anthropic-summarization-provider.ts";
+export type { AnthropicSummarizationOptions } from "./anthropic-summarization-provider.ts";
 export { ContextRetriever } from "./retriever.ts";
 export { SessionSummarizer } from "./summarizer.ts";
 export { ContextWindowManager } from "./window-manager.ts";

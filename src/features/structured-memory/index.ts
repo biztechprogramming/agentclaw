@@ -1,5 +1,7 @@
 export * from "./types.ts";
 export { EntityExtractor } from "./extractor.ts";
+export { AnthropicLLMProvider } from "./anthropic-llm-provider.ts";
+export type { AnthropicLLMProviderOptions } from "./anthropic-llm-provider.ts";
 export { MemoryIndexer } from "./indexer.ts";
 export * from "./commands.ts";
 export * from "./handlers.ts";

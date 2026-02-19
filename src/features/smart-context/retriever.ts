@@ -32,7 +32,7 @@ export class ContextRetriever {
 
   /** Retrieve relevant context for a query, fitting within token budget */
   async retrieve(query: string, entityIds?: string[]): Promise<ContextChunk[]> {
-    const rawResults = hybridSearch(this.db, {
+    const rawResults = await hybridSearch(this.db, {
       query,
       limit: 50,
       minScore: 0,

@@ -66,7 +66,7 @@ export class KnowledgeStore {
 
   // --- Content Chunks ---
 
-  insertChunk(params: {
+  async insertChunk(params: {
     id: string;
     sourceUri: string;
     chunkIndex?: number;
@@ -74,8 +74,31 @@ export class KnowledgeStore {
     embedding?: Buffer;
     tokenCount?: number;
     metadata?: Record<string, unknown>;
-  }): void {
+  }): Promise<void> {
     const hash = KnowledgeStore.contentHash(params.content);
+
+    // Generate embedding if provider is available and none was supplied
+    let embeddingBuf = params.embedding ?? null;
+    if (!embeddingBuf && this.embeddings.dimensions > 0) {
+      try {
+        const vec = await this.embeddings.embed(params.content);
+        embeddingBuf = Buffer.from(vec.buffer);
+
+        // Also insert into vec0 virtual table for vector search
+        try {
+          this.db
+            .prepare(
+              "INSERT INTO vec_content_chunks (rowid, embedding) VALUES ((SELECT rowid FROM content_chunks WHERE id = ? UNION SELECT MAX(rowid)+1 FROM content_chunks), ?)",
+            )
+            .run(params.id, embeddingBuf);
+        } catch {
+          // vec0 table may not exist if sqlite-vec not loaded
+        }
+      } catch {
+        // Embedding generation failed — proceed without
+      }
+    }
+
     this.db
       .prepare(`
       INSERT OR REPLACE INTO content_chunks (id, source_uri, chunk_index, content, content_hash, embedding, token_count, metadata)
@@ -87,10 +110,26 @@ export class KnowledgeStore {
         params.chunkIndex ?? 0,
         params.content,
         hash,
-        params.embedding ?? null,
+        embeddingBuf,
         params.tokenCount ?? null,
         JSON.stringify(params.metadata ?? {}),
       );
+
+    // Insert into vec0 after the chunk exists (so rowid is stable)
+    if (embeddingBuf) {
+      try {
+        const row = this.db
+          .prepare("SELECT rowid FROM content_chunks WHERE id = ?")
+          .get(params.id) as { rowid: number } | undefined;
+        if (row) {
+          this.db
+            .prepare("INSERT OR REPLACE INTO vec_content_chunks (rowid, embedding) VALUES (?, ?)")
+            .run(row.rowid, embeddingBuf);
+        }
+      } catch {
+        // vec0 table may not exist
+      }
+    }
   }
 
   getChunk(id: string): Record<string, unknown> | undefined {
